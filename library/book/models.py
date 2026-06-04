@@ -3,37 +3,39 @@ from django.db import models
 
 class Book(models.Model):
     """
-        This class represents an Book. 
-        Attributes:
-        -----------
-        param name: Describes name of the book
-        type name: str max_length=128
-        param description: Describes description of the book
-        type description: str
-        param count: Describes count of the book
-        type count: int default=10
-        param authors: list of Authors
-        type authors: list->Author
+    This class represents an Book.
+    Attributes:
+    -----------
+    param name: Describes name of the book
+    type name: str max_length=128
+    param description: Describes description of the book
+    type description: str
+    param count: Describes count of the book
+    type count: int default=10
+    param authors: list of Authors
+    type authors: list->Author
     """
+
     name = models.CharField(max_length=128)
     description = models.TextField()
     count = models.IntegerField(default=10)
-    authors = models.ManyToManyField('author.Author', related_name='books')
+    authors = models.ManyToManyField("author.Author", related_name="books")
 
     def __str__(self):
         """
         Magic method is redefined to show all information about Book.
         :return: book id, book name, book description, book count, book authors
         """
-        
-        return f'ID: {self.id}, Name: {self.name}, Description: {self.description}, Count: {self.count}, Authors: {[author.name for author in self.authors.all()]}'
+
+        return f"ID: {self.id}, Name: {self.name}, Description: {self.description}, Count: {self.count}, Authors: {[author.name for author in self.authors.all()]}"
 
     def __repr__(self):
         """
         This magic method is redefined to show class and id of Book object.
         :return: class, id
         """
-        return f'Class: {self.__class__}, ID: {self.id}'
+        # return f"Class: {self.__class__}, ID: {self.id}"
+        return f"Book(id={self.id})"
 
     @staticmethod
     def get_by_id(book_id):
@@ -89,11 +91,11 @@ class Book(models.Model):
         | }
         """
         return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'count': self.count,
-            'authors': [author.to_dict() for author in self.authors.all()]
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "count": self.count,
+            "authors": [author.to_dict() for author in self.authors.all()],
         }
 
     def update(self, name=None, description=None, count=None):
