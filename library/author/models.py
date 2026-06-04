@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.core.exceptions import ValidationError
 
 class Author(models.Model):
     """
@@ -23,14 +23,14 @@ class Author(models.Model):
         Magic method is redefined to show all information about Author.
         :return: author id, author name, author surname, author patronymic
         """
-        return f'ID: {self.id}, Name: {self.name}, Surname: {self.surname}, Patronymic: {self.patronymic}'
+        return f"'id': {self.id}, 'name': '{self.name}', 'surname': '{self.surname}', 'patronymic': '{self.patronymic}'"
 
     def __repr__(self):
         """
         This magic method is redefined to show class and id of Author object.
         :return: class, id
         """
-        return f'Class: {self.__class__}, ID: {self.id}'
+        return f"Author(id={self.id})"
      
 
     @staticmethod
@@ -66,7 +66,14 @@ class Author(models.Model):
         type patronymic: str max_length=20
         :return: a new author object which is also written into the DB
         """
-        return Author.objects.create(name=name, surname=surname, patronymic=patronymic)
+        author = Author(name=name, surname=surname, patronymic=patronymic)
+        try:
+            author.full_clean()
+        except ValidationError:
+            return None
+        
+        author.save()
+        return author
 
     def to_dict(self):
         """
@@ -100,13 +107,25 @@ class Author(models.Model):
         type patronymic: str max_length=20
         :return: None
         """
+        old_name = self.name
+        old_surname = self.surname
+        old_patronymic = self.patronymic
+
         if name:
             self.name = name
         if surname:
             self.surname = surname
         if patronymic:
             self.patronymic = patronymic
-        self.save()
+        
+        try:
+            self.full_clean()
+            self.save()
+        except ValidationError:
+            self.name = old_name
+            self.surname = old_surname
+            self.patronymic = old_patronymic
+            return None
 
 
     @staticmethod

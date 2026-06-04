@@ -1,4 +1,6 @@
 from django.db import models
+from django.core.exceptions import ValidationError
+
 
 
 class Book(models.Model):
@@ -17,7 +19,7 @@ class Book(models.Model):
     """
 
     name = models.CharField(max_length=128)
-    description = models.TextField()
+    description = models.TextField(blank=True)
     count = models.IntegerField(default=10)
     authors = models.ManyToManyField("author.Author", related_name="books")
 
@@ -26,8 +28,9 @@ class Book(models.Model):
         Magic method is redefined to show all information about Book.
         :return: book id, book name, book description, book count, book authors
         """
+        authors_ids = list(self.authors.values_list('id', flat=True))
+        return f"'id': {self.id}, 'name': '{self.name}', 'description': '{self.description}', 'count': {self.count}, 'authors': {authors_ids}"
 
-        return f"ID: {self.id}, Name: {self.name}, Description: {self.description}, Count: {self.count}, Authors: {[author.name for author in self.authors.all()]}"
 
     def __repr__(self):
         """
@@ -73,9 +76,15 @@ class Book(models.Model):
         :return: a new book object which is also written into the DB
         """
         book = Book(name=name, description=description, count=count)
+        try:
+            book.full_clean()
+        except ValidationError:
+            return None
+        
         book.save()
         if authors:
             book.authors.set(authors)
+
         return book
 
     def to_dict(self):
@@ -109,13 +118,27 @@ class Book(models.Model):
         type count: int default=10
         :return: None
         """
+
+        old_name = self.name
+        old_description = self.description
+        old_count = self.count
+
         if name:
             self.name = name
         if description:
             self.description = description
         if count is not None:
             self.count = count
-        self.save()
+
+        try:
+            self.full_clean()
+            self.save()
+        except ValidationError:
+            self.name = old_name
+            self.description = old_description
+            self.count = old_count
+            return None
+
 
     def add_authors(self, authors):
         """
@@ -138,4 +161,4 @@ class Book(models.Model):
         """
         returns data for json request with QuerySet of all books
         """
-        return Book.objects.all()
+        return list(Book.objects.all())
