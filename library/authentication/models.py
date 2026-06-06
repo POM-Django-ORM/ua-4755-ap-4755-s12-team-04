@@ -43,6 +43,7 @@ class CustomUser(AbstractBaseUser):
     updated_at = models.DateTimeField(auto_now=True)
     role = models.IntegerField(choices=ROLE_CHOICES, default=0)
     is_active = models.BooleanField(default=False)
+    USERNAME_FIELD = 'email'
 
     def __str__(self):
         """
@@ -104,7 +105,7 @@ class CustomUser(AbstractBaseUser):
         :return: True if object existed in the db and was removed or False if it didn't exist
         """
         user = CustomUser.get_by_id(user_id)
-        if not user:
+        if user is None:
             return False
 
         user.delete()
